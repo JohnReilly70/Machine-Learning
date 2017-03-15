@@ -7,6 +7,7 @@ from sklearn.linear_model import LinearRegression
 import datetime
 import matplotlib.pyplot as plt
 from matplotlib import style
+import pickle
 
 style.use('ggplot')
 
@@ -39,13 +40,18 @@ y = np.array(df['label'])
 
 X_train, X_test, y_train, y_test = cross_validation.train_test_split(X,y,test_size=0.2)
 
-# Can change algorithm simply by using svm.SVR(), comment out which algorithm you don't want to use
-clf = LinearRegression(n_jobs=-1) #can run more jobs at once
-# clf = svm.SVR(kernel='poly')
-clf.fit(X_train, y_train)
-accuracy = clf.score(X_test, y_test)
-# print(accuracy)
+# # Can change algorithm simply by using svm.SVR(), comment out which algorithm you don't want to use
+# clf = LinearRegression(n_jobs=-1) #can run more jobs at once
+# # clf = svm.SVR(kernel='poly')
+# clf.fit(X_train, y_train)
+# with open('linearregression.pickle', 'wb') as f:
+#     pickle.dump(clf, f)
 
+#don't need to keep saving the pickle data (classifier) as we now a file called 'linearregression.pickle'
+pickle_in = open('linearregression.pickle', 'rb')
+clf = pickle.load(pickle_in)
+
+accuracy = clf.score(X_test, y_test)
 forecast_set = clf.predict(X_lately)
 print(forecast_set, accuracy, forecast_out)
 df['Forecast'] = np.nan
@@ -58,9 +64,7 @@ next_unix = last_unix + one_day
 for i in forecast_set:
     next_date = datetime.datetime.fromtimestamp(next_unix)
     next_unix += one_day
-    df.loc[next_date] = [np.nan for _ in range(len(df.columns)-1)] + [i]
-
-print(df.tail(40))
+    df.loc[next_date] = [np.nan for _ in range(len(df.columns)-1)] + [i] # created NAN for all columns other than the last (forecast) and add the forcast from forecast set
 
 df['Adj. Close'].plot()
 df['Forecast'].plot()
